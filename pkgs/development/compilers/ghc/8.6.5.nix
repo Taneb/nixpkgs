@@ -38,6 +38,8 @@
 , # Whether to disable the large address space allocator
   # necessary fix for iOS: https://www.reddit.com/r/haskell/comments/4ttdz1/building_an_osxi386_to_iosarm64_cross_compiler/d5qvd67/
   disableLargeAddressSpace ? stdenv.targetPlatform.isDarwin && stdenv.targetPlatform.isAarch64
+
+, fetchFromGitHub
 }:
 
 assert !enableIntegerSimple -> gmp != null;
@@ -84,6 +86,13 @@ let
 
   targetCC = builtins.head toolsForTarget;
 
+  haddock = fetchFromGitHub {
+    owner = "haskell";
+    repo = "haddock";
+    rev = "96d094403e343ecf28c1898c9792e4bb1699b58a";
+    sha256 = "07cwfnfskfqggwf7yk0bxnrbx6v8qq6wmnm7qqy1f37r9g3vavkb";
+  };
+
 in
 stdenv.mkDerivation (rec {
   version = "8.6.5";
@@ -93,6 +102,13 @@ stdenv.mkDerivation (rec {
     url = "https://downloads.haskell.org/~ghc/${version}/ghc-${version}-src.tar.xz";
     sha256 = "0qg3zsmbk4rkwkc3jpas3zs74qaxmw4sp4v1mhsbj0a0dzls2jjd";
   };
+
+  haddocksrc = haddock;
+
+  postUnpack = ''
+    rm -rf ghc-${version}/utils/haddock
+    cp -r $haddocksrc ghc-${version}/utils/haddock --no-preserve=mode
+  '';
 
   enableParallelBuilding = true;
 
@@ -104,13 +120,6 @@ stdenv.mkDerivation (rec {
      name = "D5123.diff";
      sha256 = "0nhqwdamf2y4gbwqxcgjxs0kqx23w9gv5kj0zv6450dq19rji82n";
     })
-    (fetchpatch rec { # https://github.com/haskell/haddock/issues/900
-     url = "https://patch-diff.githubusercontent.com/raw/haskell/haddock/pull/983.diff";
-     name = "loadpluginsinmodules.diff";
-     sha256 = "0bvvv0zsfq2581zsir97zfkggc1kkircbbajc2fz3b169ycpbha1";
-     extraPrefix = "utils/haddock/";
-     stripLen = 1;
-   })
   ];
 
   postPatch = "patchShebangs .";
