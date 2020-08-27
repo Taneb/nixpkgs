@@ -6065,7 +6065,7 @@ in
 
   patchutils_0_3_3 = callPackage ../tools/text/patchutils/0.3.3.nix { };
 
-  parted = callPackage ../tools/misc/parted { };
+  parted = callPackage ../tools/misc/parted { python = python3; };
 
   passh = callPackage ../tools/networking/passh { };
 
